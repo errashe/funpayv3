@@ -5,16 +5,16 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 )
 
 type Parser struct {
 	Url string
 	Collector *colly.Collector
+	Entries Entries
 }
 
 func NewParser(url string) *Parser {
-	parser := &Parser{Url: url}
+	parser := &Parser{Url: url, Entries: Entries{}}
 	parser.Collector = colly.NewCollector(colly.AllowURLRevisit())
 	return parser
 }
@@ -33,28 +33,30 @@ func (p *Parser) setup() {
 		sPrice = strings.ReplaceAll(sPrice, " ", "")
 		sPrice = strings.ReplaceAll(sPrice, string(rune(8381)), "")
 
-		entry := new(Entry)
-		entry.Side = sSide
-		entry.Server = sServer
-		entry.Seller = new(Seller)
-		entry.Seller.Name = sName
-		entry.Seller.ReviewsMedian = int64(sReviewsMedian.Length())
-		entry.Seller.ReviewsCount, _ = strconv.ParseInt(sReviewsCount, 10, 64)
-		entry.Amount, _ = strconv.ParseInt(sAmount, 10, 64)
-		entry.Price, _ = strconv.ParseFloat(sPrice, 64)
-		entry.Timestamp = time.Now()
+		tSide := sSide
+		tServer := sServer
+		tSellerName := sName
+		tSellerReviewsMedian := int64(sReviewsMedian.Length())
+		tSellerReviewsCount, _ := strconv.ParseInt(sReviewsCount, 10, 64)
+		tAmount, _ := strconv.ParseInt(sAmount, 10, 64)
+		tPrice, _ := strconv.ParseFloat(sPrice, 64)
 
-		entry.ID = entry.getID()
+		entry := NewEntry(tServer, tSide, tSellerName, tSellerReviewsCount, tSellerReviewsMedian, tAmount, tPrice)
 
 		p.Proceed(entry)
 	})
 
 	p.Collector.OnScraped(func(response *colly.Response) {
 		p.Clear()
-		if !p.Initialized {
-			p.Initialized = true
-		}
 	})
+}
+
+func (p *Parser) Proceed(entry *Entry) {
+
+}
+
+func (p *Parser) Clear() {
+
 }
 
 
